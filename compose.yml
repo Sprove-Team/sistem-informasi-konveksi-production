@@ -1,0 +1,58 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin-si_konveksi
+    restart: unless-stopped
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: ${DB_HOST}
+      PMA_PORT: ${DB_PORT}
+      PMA_USER: "root"
+      PMA_PASSWORD: ${DB_PASSWORD_ROOT}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD_ROOT}
+  db:
+    image: mysql:8
+    container_name: db-mysql-si_konveksi
+    platform: linux/amd64
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "$$MYSQL_USER",
+          "-p $$MYSQL_ROOT_PASSWORD",
+        ]
+      timeout: 20s
+      retries: 10
+    environment:
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD_ROOT}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - ./db/mysql/backup:/var/lib/mysql
+  api:
+    image: ganes556/be-sistem-informasi-konveksi-app:latest
+    container_name: api-si_konveksi
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    env_file:
+      - .env
+  app:
+    image: ekajaya740/sistem-informasi-konveksi-fe-app:d0f4af2
+    container_name: app-si_konveksi
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
